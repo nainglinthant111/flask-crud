@@ -1,10 +1,1 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python3 -m py_compile app/__init__.py app/config.py app/models.py app/routes.py run.py)",
-      "Bash(python3 -c \"import flask, flask_sqlalchemy, flask_cors\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5000/api/register)",
-      "Bash(pkill -f \"python run.py\")"
-    ]
-  }
-}
+
