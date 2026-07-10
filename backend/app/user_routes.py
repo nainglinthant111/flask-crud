@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
 from . import db
 from .decorators import login_required
@@ -31,6 +31,9 @@ def get_user(user_id):
 @users_bp.put("/<int:user_id>")
 @login_required
 def update_user(user_id):
+    if session["user_id"] != user_id:
+        return _error("You can only update your own account.", 403)
+
     user = db.session.get(User, user_id)
     if not user:
         return _error("User not found.", 404)
@@ -49,11 +52,10 @@ def update_user(user_id):
         if password_error:
             return _error(password_error)
 
-    if User.query.filter(User.username == username, User.id != user_id).first():
-        return _error("Username is already taken.", 409)
-
-    if User.query.filter(User.email == email, User.id != user_id).first():
-        return _error("Email is already registered.", 409)
+    if User.query.filter(
+        ((User.username == username) | (User.email == email)) & (User.id != user_id)
+    ).first():
+        return _error("A user with that username or email already exists.", 409)
 
     user.username = username
     user.email = email
@@ -68,6 +70,9 @@ def update_user(user_id):
 @users_bp.delete("/<int:user_id>")
 @login_required
 def delete_user(user_id):
+    if session["user_id"] != user_id:
+        return _error("You can only delete your own account.", 403)
+
     user = db.session.get(User, user_id)
     if not user:
         return _error("User not found.", 404)

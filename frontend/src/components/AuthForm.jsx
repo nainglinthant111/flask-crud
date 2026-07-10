@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { API_BASE_URL } from "../apiConfig";
+import { csrfHeaders, fetchCsrfToken } from "../csrf";
 import "./AuthForm.css";
 
 const INITIAL_FORM_STATE = {
@@ -36,9 +37,10 @@ function AuthForm({ onAuthenticated }) {
       : formData;
 
     try {
+      await fetchCsrfToken();
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         credentials: "include",
         body: JSON.stringify(payload),
       });

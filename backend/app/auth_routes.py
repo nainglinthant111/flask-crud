@@ -1,15 +1,32 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, make_response, request, session
+from flask_wtf.csrf import generate_csrf
 
-from . import db
+from . import csrf, db
 from .decorators import login_required
 from .models import User
 from .validators import validate_email, validate_password, validate_username
 
 auth_bp = Blueprint("auth", __name__)
 
+csrf.exempt(auth_bp)
+
 
 def _error(message, status=400):
     return jsonify({"error": message}), status
+
+
+@auth_bp.get("/csrf-token")
+def get_csrf_token():
+    token = generate_csrf()
+    response = make_response(jsonify({"csrf_token": token}))
+    response.set_cookie(
+        "csrf_token",
+        token,
+        secure=True,
+        samesite="Lax",
+        max_age=3600,
+    )
+    return response
 
 
 @auth_bp.post("/register")
@@ -23,11 +40,10 @@ def register():
     if error:
         return _error(error)
 
-    if User.query.filter_by(username=username).first():
-        return _error("Username is already taken.", 409)
-
-    if User.query.filter_by(email=email).first():
-        return _error("Email is already registered.", 409)
+    if User.query.filter(
+        (User.username == username) | (User.email == email)
+    ).first():
+        return _error("A user with that username or email already exists.", 409)
 
     user = User(username=username, email=email)
     user.set_password(password)

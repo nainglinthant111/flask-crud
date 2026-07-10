@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API_BASE_URL } from "../apiConfig";
+import { csrfHeaders, fetchCsrfToken } from "../csrf";
 import "./UserTable.css";
 
 const EMPTY_NEW_USER = { username: "", email: "", password: "" };
@@ -43,7 +44,11 @@ function UserTable({ currentUser, onLogout }) {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/logout`, { method: "POST", credentials: "include" });
+      await fetch(`${API_BASE_URL}/logout`, {
+        method: "POST",
+        headers: csrfHeaders(),
+        credentials: "include",
+      });
     } finally {
       onLogout();
     }
@@ -55,9 +60,10 @@ function UserTable({ currentUser, onLogout }) {
     setFeedback({ type: null, message: "" });
 
     try {
+      await fetchCsrfToken();
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         credentials: "include",
         body: JSON.stringify(newUser),
       });
@@ -95,9 +101,10 @@ function UserTable({ currentUser, onLogout }) {
     setFeedback({ type: null, message: "" });
 
     try {
+      await fetchCsrfToken();
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         credentials: "include",
         body: JSON.stringify(editForm),
       });
@@ -128,6 +135,7 @@ function UserTable({ currentUser, onLogout }) {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: "DELETE",
+        headers: csrfHeaders(),
         credentials: "include",
       });
 

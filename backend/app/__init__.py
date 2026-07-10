@@ -3,10 +3,12 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 
 from .config import Config
 
 db = SQLAlchemy()
+csrf = CSRFProtect()
 
 
 def create_app(config_class=Config):
@@ -16,6 +18,7 @@ def create_app(config_class=Config):
     os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
+    csrf.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}}, supports_credentials=True)
 
     from .auth_routes import auth_bp
